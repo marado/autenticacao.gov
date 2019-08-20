@@ -278,14 +278,21 @@ char *X509_to_PEM(X509 *x509) {
         return NULL;
     }
 
-    pem = (char *) malloc( bio->num_write + 1 );
+    uint64_t num_write = 0;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    num_write = bio->num_write;
+#else
+    num_write = BIO_number_written(bio);
+#endif
+    pem = (char *) malloc( num_write + 1 );
+
     if ( NULL == pem ){
         BIO_free(bio);
         return NULL;
     }
 
-    memset( pem, 0, bio->num_write + 1 );
-    BIO_read( bio, pem, bio->num_write );
+    memset( pem, 0, num_write + 1 );
+    BIO_read( bio, pem, num_write );
     BIO_free( bio );
 
     return pem;
